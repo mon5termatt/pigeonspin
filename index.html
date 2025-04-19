@@ -12,44 +12,75 @@
 	<meta property="og:title" content="PIGEON SPIN!!!">
 	<meta property="og:description" content="Bird is the word!!!">
         <meta property="og:image" content="pigeon.gif">
+        <!-- Link to external CSS file -->
+        <link rel="stylesheet" href="styles.css">
 </head>
-<style>
-.verticalhorizontal {
-    display: table-cell;
-    height: 100%;
-    text-align: center;
-    width: 90%;
-    vertical-align: middle;
-}
-.fullscreen {
-    text-align: center;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    position: absolute;
-    width: 100vw;
-    height: 90vh;
-    top: 10vh;
-    left: 0vh;
-    background:;
-    opacity: 1;
-}
-</style>
 <body onload="addEvent()">
 <script>
       function addEvent(){
-         document.body.addEventListener("click", play)
-       }
+         document.body.addEventListener("click", play);
+         // Add click event to remove overlay and play music
+         document.querySelector('.start-overlay').addEventListener('click', function(e) {
+             this.style.display = 'none';
+             play(); // Play music when overlay is clicked
+             e.stopPropagation(); // Prevent event from bubbling to body
+         });
+      }
       function play() {
         var audio = document.getElementById("player");
         audio.play();
+        // Update play/pause button text when playing
+        if (document.getElementById("play-pause-btn")) {
+            document.getElementById("play-pause-btn").textContent = "Pause";
+        }
+      }
+      
+      // Fixed toggle play/pause function
+      function togglePlayPause(e) {
+        e.stopPropagation(); // Prevent the click from triggering the body click handler
+        var audio = document.getElementById("player");
+        var btn = document.getElementById("play-pause-btn");
+        
+        if (audio.paused) {
+            audio.play();
+            btn.textContent = "Pause";
+        } else {
+            audio.pause();
+            btn.textContent = "Play";
+        }
+      }
+      
+      // New function to control volume
+      function adjustVolume(value) {
+        var audio = document.getElementById("player");
+        audio.volume = value;
+        document.getElementById("volume-value").textContent = Math.round(value * 100) + "%";
       }
 </script>
+
+<!-- New overlay element -->
+<div class="start-overlay">
+    <div class="overlay-text">
+        Click or tap anywhere to start the music!
+    </div>
+</div>
+
+<!-- Moved controls to the top -->
+<div id="header-controls">
+    <div class="site-buttons">
+        <a href="https://www.youtube.com/channel/UCOlRxTws_N2pA1qEreIrJUA" class="site-button">Subscribe To My Channel</a>
+        <a href="https://mon5termatt.com" class="site-button">Visit My Main Site</a>
+    </div>
+    <div class="volume-control">
+        <button id="play-pause-btn" class="play-pause-btn" onclick="togglePlayPause(event)">Pause</button>
+        <span>Volume: </span>
+        <input type="range" min="0" max="1" step="0.01" value="1" class="volume-slider" oninput="adjustVolume(this.value)">
+        <span id="volume-value">100%</span>
+    </div>
+    <audio id="player" autoplay loop><source src="SurfinBird.mp3" type="audio/mp3"></audio>
+</div>
+
 <div><center><img class="fullscreen" src="pigeon.gif" alt="PIGEON!" /></center></div>
-<footer id="footer">
-	<center><p><a href="https://www.youtube.com/channel/UCOlRxTws_N2pA1qEreIrJUA">Subscribe To My Channel</a> ||| CLICK ANYWHERE TO PLAY ||| <a href="https://mon5termatt.com">Visit My Main Site</a></p></center>		
-	<audio id="player" autoplay loop><source src="SurfinBird.mp3" type="audio/mp3"></audio>
-</footer>
 
 <!-- Matomo -->
 <script>
