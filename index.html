@@ -17,15 +17,75 @@
 </head>
 <body onload="addEvent()">
 <script>
+      let startTime;
+      let timerInterval;
+      let totalTimeSpent = parseInt(localStorage.getItem('totalTimeSpent')) || 0;
+      let sessionTimeSpent = parseInt(localStorage.getItem('sessionTimeSpent')) || 0;
+      
       function addEvent(){
          document.body.addEventListener("click", play);
          // Add click event to remove overlay and play music
          document.querySelector('.start-overlay').addEventListener('click', function(e) {
              this.style.display = 'none';
              play(); // Play music when overlay is clicked
+             startTimer(); // Start the timer when overlay is clicked
+             _paq.push(['trackEvent', 'Session', 'Start', 'New session started']);
              e.stopPropagation(); // Prevent event from bubbling to body
          });
+
+         // Initialize counters
+         updateTotalTime();
+         updateSessionTime();
       }
+
+      function updateTotalTime() {
+          const hours = Math.floor(totalTimeSpent / 3600);
+          const minutes = Math.floor((totalTimeSpent % 3600) / 60);
+          document.getElementById('total-time').textContent = 
+              `Total time: ${hours}h ${minutes}m`;
+      }
+
+      function updateSessionTime() {
+          const hours = Math.floor(sessionTimeSpent / 3600);
+          const minutes = Math.floor((sessionTimeSpent % 3600) / 60);
+          const seconds = sessionTimeSpent % 60;
+          document.getElementById('session-time').textContent = 
+              `Session time: ${hours}h ${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+      }
+
+      function startTimer() {
+          startTime = Date.now();
+          sessionTimeSpent = 0; // Reset session time when starting
+          localStorage.setItem('sessionTimeSpent', '0');
+          updateTimer();
+          updateSessionTime();
+          timerInterval = setInterval(updateTimer, 1000);
+      }
+
+      function updateTimer() {
+          const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+          const minutes = Math.floor(elapsedTime / 60);
+          const seconds = elapsedTime % 60;
+          
+          // Track time spent every 30 seconds
+          if (elapsedTime % 30 === 0) {
+              totalTimeSpent += 30;
+              localStorage.setItem('totalTimeSpent', totalTimeSpent);
+              updateTotalTime();
+              _paq.push(['trackEvent', 'TimeSpent', 'Total', `${Math.floor(totalTimeSpent/60)}m`]);
+          }
+
+          // Update session time every second
+          sessionTimeSpent = elapsedTime;
+          localStorage.setItem('sessionTimeSpent', sessionTimeSpent);
+          updateSessionTime();
+
+          // Track session time every minute
+          if (elapsedTime % 60 === 0) {
+              _paq.push(['trackEvent', 'TimeSpent', 'Session', `${minutes}m`]);
+          }
+      }
+      
       function play() {
         var audio = document.getElementById("player");
         audio.play();
@@ -33,6 +93,7 @@
         if (document.getElementById("play-pause-btn")) {
             document.getElementById("play-pause-btn").textContent = "Pause";
         }
+        _paq.push(['trackEvent', 'Player', 'Play', 'Music started']);
       }
       
       // Fixed toggle play/pause function
@@ -44,9 +105,11 @@
         if (audio.paused) {
             audio.play();
             btn.textContent = "Pause";
+            _paq.push(['trackEvent', 'Player', 'Play', 'Music resumed']);
         } else {
             audio.pause();
             btn.textContent = "Play";
+            _paq.push(['trackEvent', 'Player', 'Pause', 'Music paused']);
         }
       }
       
@@ -55,6 +118,7 @@
         var audio = document.getElementById("player");
         audio.volume = value;
         document.getElementById("volume-value").textContent = Math.round(value * 100) + "%";
+        _paq.push(['trackEvent', 'Player', 'Volume', `${Math.round(value * 100)}%`]);
       }
 </script>
 
@@ -68,14 +132,17 @@
 <!-- Moved controls to the top -->
 <div id="header-controls">
     <div class="site-buttons">
-        <a href="https://www.youtube.com/channel/UCOlRxTws_N2pA1qEreIrJUA" class="site-button">Subscribe To My Channel</a>
-        <a href="https://mon5termatt.com" class="site-button">Visit My Main Site</a>
-    </div>
-    <div class="volume-control">
+
+        <a href="https://mon5termatt.com" class="site-button">Visit My Main Site</a> |||
         <button id="play-pause-btn" class="play-pause-btn" onclick="togglePlayPause(event)">Pause</button>
         <span>Volume: </span>
         <input type="range" min="0" max="1" step="0.01" value="1" class="volume-slider" oninput="adjustVolume(this.value)">
         <span id="volume-value">100%</span>
+        ||| <a href="https://www.youtube.com/channel/UCOlRxTws_N2pA1qEreIrJUA" class="site-button">Subscribe To My Channel</a>
+      </div>
+    <div class="stats-display" style="text-align: center; margin: 10px 0;">
+        <span id="total-time" style="margin-right: 20px; font-weight: bold; color: #45b7d1; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); padding: 5px 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">Total time: 0h 0m</span>
+        <span id="session-time" style="font-weight: bold; color: #96ceb4; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); padding: 5px 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">Session time: 0h 0m 00s</span>
     </div>
     <audio id="player" autoplay loop><source src="SurfinBird.mp3" type="audio/mp3"></audio>
 </div>
